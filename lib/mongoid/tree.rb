@@ -411,6 +411,64 @@ module Mongoid
       children.destroy_all
     end
 
+        ##
+    # Destroys all children by calling their #destroy method (does invoke callbacks)
+    #
+    # @return [undefined]
+    def destroy_children
+      children.destroy_all
+    end
+
+    ##
+    # Shows records in a tree view
+    #
+    # @author by Amerine, modified for mongoid-tree by LordDoig
+    # @see https://github.com/amerine/acts_as_tree Acts As Tree on Github
+    # @see https://github.com/lorddoig LordDoig on Github
+    #
+    # @param [Symbol] method called on each node to generate label
+    # @param [Mongoid::Document] the node at which to begin traversing the tree
+    # @param [Integer] used in recursion to define where to print the next label
+    #
+    # @return [String] a multiline representation of the tree
+    #
+    # @example Node.tree_view
+    #   # =>
+    #   root
+    #    |_ child1
+    #    |    |_ subchild1
+    #    |    |_ subchild2
+    #    |_ child2
+    #       |_ subchild3
+    #       |_ subchild4
+    #
+    def tree_view(label_method = :name, node = nil, level = -1)
+      if node.nil?
+        puts root_label
+        nodes = siblings_and_self.to_a
+      else
+        label = "|_ #{node.send(label_method)}"
+        if level == 0
+          puts " #{label}"
+        else
+          puts " |#{"    "*level}#{label}"
+        end
+        nodes = node.children.to_a
+      end
+      nodes.each do |child|
+        tree_view(label_method, child, level+1)
+      end
+    end
+
+    ##
+    # Returns a label for the root element in tree_view, to be overridden in
+    #   including document
+    #
+    # @return [String] the label for the root node
+    def root_label
+      'root'
+    end
+
   private
 
     ##
